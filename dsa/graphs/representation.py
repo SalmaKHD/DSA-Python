@@ -1,14 +1,16 @@
+import heapq
 from collections import deque
 
 
 class Node:
     value = 0
     index: int
+    weight: int
 
-    def __init__(self, value, index: int):
+    def __init__(self, value, index: int, weight: int):
         self.value = value
         self.index = index
-
+        self.weight = weight
 
 class Graph:
     def __init__(self, max_size):
@@ -66,7 +68,24 @@ class Graph:
             if neighbor_node not in visited_nodes:
                 self.do_dfs(neighbor_node, visited_nodes)
 
-    def find_shortest_path_dfs(self, source_node: Node):
+    def detect_cycle(self, source: Node):
+        if source.index not in self.adjacency_list:
+            return False
+        #         cycle detected if in the process of dfs we encounter a node that has already been visited
+        visited = set()
+        return self.traverse(source, None, visited)
+    def traverse(self, node: Node, parent_node: Node, visited):
+        visited.add(node.index)
+        for neighbor in self.adjacency_list.get(node.index, []):
+            if neighbor not in visited:
+                if self.traverse(neighbor, node, visited):
+                    return True
+            elif neighbor != parent_node:
+                return True
+        return False
+
+    # for unweighted graphs
+    def find_shortest_path_bfs(self, source_node: Node):
         distances = {}
         queue = deque()
         queue.append(source_node)
@@ -79,6 +98,23 @@ class Graph:
                     distances[neighbor_node] = current_node_distance
                 queue.append(neighbor_node)
             current_node_distance += 1
+
+    # for weighted graphs
+    def dijkstra(self, source: Node):
+        distances = [float('inf')] * self.node_count
+        pq = []
+        heapq.heappush(pq, (0, source.index))
+        distances[source.index] = 0
+        while pq:
+            current_distance, current_index = heapq.heappop(pq)
+            if current_distance> distances[current_index]:
+                continue
+            for neighbor_index, weight in self.adjacency_list.get(current_index, []):
+                distance = current_distance + weight
+                if distance < distances[neighbor_index]:
+                    distances[neighbor_index] = distance
+                    heapq.heappush(pq, (distance, neighbor_index))
+        return distances
 
 
 def main():
