@@ -116,6 +116,39 @@ class Graph:
                     heapq.heappush(pq, (distance, neighbor_index))
         return distances
 
+    def topological_sorting(self, source:Node):
+        visited = set()
+        if source not in self.adjacency_list:
+            return None
+        queue = deque()
+        self.topo_traverse(source, queue, visited)
+        return list(queue)
+
+    def topo_traverse(self, current_node: Node, queue, visited):
+        if current_node in visited:
+            return
+        visited.add(current_node)
+        for neighbor_node in self.adjacency_list.get(current_node, []):
+            self.topo_traverse(neighbor_node, queue, visited)
+        queue.appendleft(current_node)
+
+    def bellmen_ford(self, source: Node):
+        distances = [float('inf')] * self.node_count
+        distances[source.index] = 0
+        for i in range(self.node_count - 1):
+            for node in self.adjacency_list:
+                for neighbor_index, weight in self.adjacency_list[node]:
+                    if distances[node] + weight < distances[neighbor_index]:
+                        distances[neighbor_index] = distances[node] + weight
+
+        for node in self.adjacency_list:
+            for neighbor_index, weight in self.adjacency_list[node]:
+                if distances[node] + weight < distances[neighbor_index]:
+                    print("Graph contains a negative-weight cycle")
+                    return None
+        return distances
+
+
 
 def main():
     graph = Graph(10)
